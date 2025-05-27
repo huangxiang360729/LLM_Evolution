@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Model Evolution History</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom scrollbar for better aesthetics */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1; /* Light grey track */
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #888; /* Darker grey thumb */
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555; /* Even darker on hover */
+    }
+    /* Ensure body takes full height and #root grows */
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      background-color: #f1f5f9; /* bg-slate-100 */
+    }
+    #root {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    /* Utility to hide scrollbars */
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none; /* Safari and Chrome */
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;  /* IE and Edge */
+      scrollbar-width: none;  /* Firefox */
+    }
+    /* Smooth scrolling for anchor links */
+    html {
+      scroll-behavior: smooth;
+    }
+  </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.1.0",
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/"
+  }
+}
+</script>
+</head>
+<body class="bg-slate-100">
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <div id="root"></div>
+  <script type="module">
+    import React, { useState, useEffect, Fragment } from 'react';
+    import ReactDOM from 'react-dom/client';
+
+    // --- START OF INLINED SCRIPT ---
+
+    // --- From constants.ts ---
+    const COMPANY_THEMES = {
+      anthropic: {
+        baseColor: '#AE5630',
+        textColor: 'text-[#AE5630]',
+        borderColor: 'border-[#AE5630]',
+        headerBgColor: 'bg-[#AE5630]',
+        seriesHeaderBgColor: 'bg-[#D48A6A]',
+        seriesHeaderTextColor: 'text-white',
+        rowHoverBgColor: 'hover:bg-[#fdf0eb]',
+        notesBorderColor: 'border-[#AE5630]',
+        notesBgColor: 'bg-[#fdf5f2]',
+        notesLinkColor: 'text-[#8C4221]',
+        notesLinkHoverColor: 'hover:text-[#5A2A13]',
+      },
+      qwen: {
+        baseColor: '#3498db',
+        textColor: 'text-[#3498db]',
+        borderColor: 'border-[#3498db]',
+        headerBgColor: 'bg-[#3498db]',
+        seriesHeaderBgColor: 'bg-[#5dade2]',
+        seriesHeaderTextColor: 'text-white',
+        rowHoverBgColor: 'hover:bg-[#eaf5ff]',
+        notesBorderColor: 'border-[#3498db]',
+        notesBgColor: 'bg-[#eef5f9]',
+        notesLinkColor: 'text-[#2980b9]',
+        notesLinkHoverColor: 'hover:text-[#1f618d]',
+      },
+      openai: {
+        baseColor: '#10a37f',
+        textColor: 'text-[#10a37f]',
+        borderColor: 'border-[#10a37f]',
+        headerBgColor: 'bg-[#10a37f]',
+        seriesHeaderBgColor: 'bg-[#19c395]',
+        seriesHeaderTextColor: 'text-white',
+        rowHoverBgColor: 'hover:bg-[#e6f7f3]',
+        notesBorderColor: 'border-[#10a37f]',
+        notesBgColor: 'bg-[#eefaf7]',
+        notesLinkColor: 'text-[#0b7e5e]',
+        notesLinkHoverColor: 'hover:text-[#075c43]',
+      },
+      meta: {
+        baseColor: '#1877f2',
+        textColor: 'text-[#1877f2]',
+        borderColor: 'border-[#1877f2]',
+        headerBgColor: 'bg-[#1877f2]',
+        seriesHeaderBgColor: 'bg-[#4a90e2]',
+        seriesHeaderTextColor: 'text-white',
+        rowHoverBgColor: 'hover:bg-[#e6f2ff]',
+        notesBorderColor: 'border-[#1877f2]',
+        notesBgColor: 'bg-[#eef5f9]',
+        notesLinkColor: 'text-[#1877f2]',
+        notesLinkHoverColor: 'hover:text-[#1053a8]',
+      },
+      google: {
+        baseColor: '#34A853', // Google Green
+        textColor: 'text-[#34A853]',
+        borderColor: 'border-[#34A853]',
+        headerBgColor: 'bg-[#34A853]',
+        seriesHeaderBgColor: 'bg-[#66BB6A]', // Lighter green
+        seriesHeaderTextColor: 'text-white',
+        rowHoverBgColor: 'hover:bg-[#e8f5e9]', // Very light green
+        notesBorderColor: 'border-[#34A853]',
+        notesBgColor: 'bg-[#e8f5e9]',
+        notesLinkColor: 'text-[#1E8E3E]', // Darker green
+        notesLinkHoverColor: 'hover:text-[#0F5A2F]', // Even darker green
+      },
+    };
+
+    const TABLE_HEADERS_DEFAULT = [
+      "模型系列/名称",
+      "发布/可用时间 (状态)",
+      "技术报告/主要文档",
+      "主要技术特点",
+      "架构与训练细节",
+      "上下文窗口 (Tokens)",
+      "多模态能力",
+      "参数规模/版本",
+      "训练数据量 (T)",
+    ];
+
+    const TAB_ORDER_FROM_CONSTANTS = ["anthropic", "qwen", "openai", "meta", "google"];
+    // --- End of constants.ts ---
+
+    // --- From components/ModelVariant.tsx ---
+    const ModelVariant = ({ children }) => {
+      return (
+        React.createElement('span', { className: "block text-xs text-slate-500 mt-1 italic" }, children)
+      );
+    };
+    // --- End of components/ModelVariant.tsx ---
+
+    // --- From data/anthropicData.tsx ---
+    const anthropicTableRows = [
+      { isSeriesHeader: true, cells: [{ content: "Claude 1", colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: "Claude 1.0" },
+          { content: "2023年3月14日 (早期可用性) [A-1]" },
+          { content: "API文档/合作伙伴描述" },
+          { content: "注重有益、诚实和无害 (HHH)，擅长对话、内容创作、推理。" },
+          { content: "Transformer架构，Constitutional AI, RLAIF。" },
+          { content: "9K" },
+          { content: "文本" },
+          { content: "未公开" },
+          { content: "未公开" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Claude 1.2" },
+          { content: React.createElement(Fragment, null, React.createElement(Fragment, null, "2023年5月 (API更新)"), React.createElement("br", null), React.createElement(Fragment, null, "2023年5月11日 (100K上下文宣布) [A-2]")) },
+          { content: "API文档/博客 (100K)" },
+          { content: "改进性能和指令遵循能力。" },
+          { content: "Claude 1架构迭代。" },
+          { content: "100K" },
+          { content: "文本" },
+          { content: "未公开" },
+          { content: "未公开" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Claude Instant 1.1" },
+          { content: "约2023年3月/4月" },
+          { content: "API文档" },
+          { content: "更快、更经济，针对低延迟场景。" },
+          { content: "Claude架构的轻量级版本。" },
+          { content: "9K (后扩展至100K)" },
+          { content: "文本" },
+          { content: "未公开" },
+          { content: "未公开" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Claude Instant 1.2" },
+          { content: "约2023年8月 (API更新) [A-3]" },
+          { content: "API文档" },
+          { content: "提升性价比，保持Instant系列的速度优势。" },
+          { content: "Claude Instant架构迭代。" },
+          { content: "100K" },
+          { content: "文本" },
+          { content: "未公开" },
+          { content: "未公开" },
+        ],
+      },
+      { isSeriesHeader: true, cells: [{ content: "Claude 2", colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: "Claude 2.0" },
+          { content: "2023年7月11日 [A-3]" },
+          { content: "博客, API文档" },
+          { content: "显著提升编码、数学和推理性能，更安全。" },
+          { content: "Claude 1.x架构的重大升级。" },
+          { content: "100K" },
+          { content: "文本 (可处理文本文件上传)" },
+          { content: "未公开" },
+          { content: "未公开" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Claude 2.1" },
+          { content: "2023年11月21日 [A-4]" },
+          { content: "博客, API文档" },
+          { content: "显著降低幻觉率，引入工具使用 (Tool Use) Beta。" },
+          { content: "Claude 2架构迭代，优化长上下文和准确性。" },
+          { content: "200K" },
+          { content: "文本 (可处理文本文件上传，支持工具使用)" },
+          { content: "未公开" },
+          { content: "未公开" },
+        ],
+      },
+      { isSeriesHeader: true, cells: [{ content: "Claude 3", colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: "Claude 3 Opus" },
+          { content: "2024年3月4日 [A-5]" },
+          { content: "模型卡, 博客 (2024年3月4日) [A-6]" },
+          { content: "Anthropic最智能模型，复杂任务SOTA水平。" },
+          { content: "新模型架构，提升多模态理解、复杂推理、长上下文。" },
+          { content: "200K (常规), 高达1M (特定用例)" },
+          { content: "文本、图像输入，文本输出。" },
+          { content: "未公开" },
+          { content: "未公开" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Claude 3 Sonnet" },
+          { content: "2024年3月4日 [A-5]" },
+          { content: "模型卡, 博客 (2024年3月4日) [A-6]" },
+          { content: "智能与速度的理想平衡，高性价比，企业级应用。" },
+          { content: "与Opus共享架构基础，平衡性能与效率。" },
+          { content: "200K" },
+          { content: "文本、图像输入，文本输出。" },
+          { content: "未公开" },
+          { content: "未公开" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Claude 3 Haiku" },
+          { content: React.createElement(Fragment, null, React.createElement(Fragment, null, "2024年3月4日 (宣布)"), React.createElement("br", null), React.createElement(Fragment, null, "2024年3月13日 (广泛可用) [A-7]")) },
+          { content: "模型卡, 博客 (2024年3月4日) [A-6]" },
+          { content: "Anthropic最快、最紧凑模型，近乎实时响应，客户互动。" },
+          { content: "与Opus/Sonnet共享架构基础，极致优化速度与成本。" },
+          { content: "200K" },
+          { content: "文本、图像输入，文本输出。" },
+          { content: "未公开" },
+          { content: "未公开" },
+        ],
+      },
+      { isSeriesHeader: true, cells: [{ content: "Claude 3.5", colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: "Claude 3.5 Sonnet" },
+          { content: "2024年6月20日 [A-8]" },
+          { content: "博客, API文档 (2024年6月20日)" },
+          { content: "优于Claude 3 Opus的推理、知识和编码能力，速度是Opus两倍。引入Artifacts功能。" },
+          { content: "Claude 3架构重大改进，优化推理、编码和视觉。" },
+          { content: "200K" },
+          { content: "文本、图像输入，文本输出 (包括Artifacts)。" },
+          { content: "未公开" },
+          { content: "未公开" },
+        ],
+      },
+      { isSeriesHeader: true, cells: [{ content: "Claude 3.7 (Original HTML had a future date - using it as reference)", colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: "Claude 3.7 Sonnet" },
+          { content: "2025年2月24日 (基于原始HTML日期) [A-9]" },
+          { content: "博客, API文档" },
+          { content: "开创性的混合AI推理模型，可选快速响应或逐步推理。" },
+          { content: "混合推理模型架构。" },
+          { content: "200K" },
+          { content: "文本、图像输入，文本输出。" },
+          { content: "未公开" },
+          { content: "未公开" },
+        ],
+      },
+      { isSeriesHeader: true, cells: [{ content: "Claude 4 (Hypothetical - based on provided HTML structure)", colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: React.createElement(Fragment, null, React.createElement(Fragment, null, "Claude 4 Opus"), React.createElement(ModelVariant, null, "(Claude Opus 4)")) },
+          { content: "2025年5月22日 (基于原始HTML日期) [A-10], [A-11]" },
+          { content: "博客, System Card元素" },
+          { content: "Anthropic最强模型，顶级编码、先进推理、AI智能体能力。混合推理，AI安全等级3 (ASL-3)。" },
+          { content: "混合推理模型架构，支持扩展思考和并行工具使用。" },
+          { content: "200K" },
+          { content: "文本、图像输入，文本输出。支持工具使用和记忆能力。" },
+          { content: "未公开" },
+          { content: "未公开" },
+        ],
+      },
+      {
+        cells: [
+          { content: React.createElement(Fragment, null, React.createElement(Fragment, null, "Claude 4 Sonnet"), React.createElement(ModelVariant, null, "(Claude Sonnet 4)")) },
+          { content: "2025年5月22日 (基于原始HTML日期) [A-10], [A-11]" },
+          { content: "博客, System Card元素" },
+          { content: "Claude 3.7 Sonnet的显著升级，卓越编码和推理，精确指令遵循。混合推理，AI安全等级2 (ASL-2)。" },
+          { content: "混合推理模型架构，支持扩展思考和并行工具使用。" },
+          { content: "200K" },
+          { content: "文本、图像输入，文本输出。支持工具使用。" },
+          { content: "未公开" },
+          { content: "未公开" },
+        ],
+      },
+    ];
+
+    const anthropicNotes = {
+      general: [
+        React.createElement(Fragment, { key: "gen1" }, React.createElement("strong", null, "注：")),
+        React.createElement(Fragment, { key: "gen2" }, "- 表示信息暂缺、不适用或未明确公开。"),
+        React.createElement(Fragment, { key: "gen3" }, "Anthropic模型的具体参数量和训练所用Token数量通常不公开。"),
+        React.createElement(Fragment, { key: "gen4" }, "\"发布/可用时间 (状态)\" 可能指模型宣布时间、API初步可用时间、或更广泛的集成时间。"),
+        React.createElement(Fragment, { key: "gen5" }, "Claude系列模型以其在安全性、遵循指令和减少有害输出方面的设计理念而著称。"),
+        React.createElement(Fragment, { key: "gen6" }, "Claude 4 entries are based on the structure provided in the initial HTML and hypothetical future releases. Real release details may vary."),
+        React.createElement(Fragment, { key: "gen7" }, "本表格信息基于当前可查证公开资料 (截至2025年初的模拟时间点及知识库更新)，Anthropic模型发展迅速，最新信息请以官方渠道为准。"),
+      ],
+      referencesTitle: "数据来源参考：",
+      references: [
+        { id: "A-1", url: "https://www.anthropic.com/news/claude-now-available-in-slack", text: "Claude now available in Slack" },
+        { id: "A-2", url: "https://www.anthropic.com/index/100k-context-windows", text: "100K Context Windows Announcement" },
+        { id: "A-3", url: "https://www.anthropic.com/index/claude-2", text: "Claude 2 Announcement (also covers Instant 1.2 API update context)" },
+        { id: "A-4", url: "https://www.anthropic.com/news/claude-2-1-outperforms-competitors-in-long-context-reliability-test", text: "Claude 2.1 Announcement" },
+        { id: "A-5", url: "https://www.anthropic.com/news/claude-3-family", text: "Claude 3 Family Announcement" },
+        { id: "A-6", url: "https://www.anthropic.com/claude-3-model-card.pdf", text: "Claude 3 Model Card PDF" },
+        { id: "A-7", url: "https://www.anthropic.com/news/claude-3-haiku", text: "Claude 3 Haiku Availability" },
+        { id: "A-8", url: "https://www.anthropic.com/news/claude-3-5-sonnet", text: "Claude 3.5 Sonnet Announcement" },
+        { id: "A-9", url: "https://www.anthropic.com/news/claude-3-7-sonnet", text: "Claude 3.7 Sonnet Announcement (from original HTML reference)" },
+        { id: "A-10", url: "https://www.anthropic.com/news/introducing-claude-4", text: "Claude 4 Introduction (from original HTML reference)" },
+        { id: "A-11", url: "https://aws.amazon.com/blogs/machine-learning/anthropics-claude-4-opus-sonnet-models-now-available-in-amazon-bedrock/", text: "Claude 4 on AWS Bedrock (from original HTML reference)" },
+      ].map(ref => ({...ref, url: ref.url.trim()}))
+    };
+    // --- End of data/anthropicData.tsx ---
+
+    // --- From data/qwenData.tsx ---
+    const qwenTableRows = [
+      { isSeriesHeader: true, cells: [{ content: React.createElement("strong", null, "Qwen (通义千问)"), colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: "Qwen (beta)" },
+          { content: "未开源 (内部测试阶段)" },
+          { content: "-" },
+          { content: "阿里巴巴早期大规模语言模型探索。" },
+          { content: "基于Transformer架构，类似LLaMA。" },
+          { content: "未公开" },
+          { content: "主要为文本处理" },
+          { content: "未公开" },
+          { content: "未公开" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Qwen-7B" },
+          { content: "2023年8月3日 (开源) [Q-1]" },
+          { content: "技术备忘录 (2023年8月3日) [Q-2]" },
+          { content: "支持工具使用能力，针对中英文优化。" },
+          { content: "Transformer架构，RoPE, Flash Attention。" },
+          { content: "8K [Q-3]" }, // Corrected from 32K
+          { content: "文本" },
+          { content: "7B" },
+          { content: "2.2 (初版) / 2.4 (更新) [Q-3]" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Qwen-14B" },
+          { content: "2023年9月25日 (开源) [Q-4]" },
+          { content: "Qwen技术报告 (2023年9月) [Q-3]" },
+          { content: "增强的对话和创作能力。" },
+          { content: "Transformer架构。" },
+          { content: "8K [Q-3]" },
+          { content: "文本" },
+          { content: "14B" },
+          { content: "3.0 [Q-3]" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Qwen-1.8B" },
+          { content: "2023年11月30日 (开源) [Q-5]" },
+          { content: "Qwen技术报告 (2023年9月) [Q-3]" },
+          { content: "轻量级，增强系统提示和工具使用。" },
+          { content: "Transformer架构。" },
+          { content: "32K [Q-3]" },
+          { content: "文本" },
+          { content: "1.8B" },
+          { content: "2.2 [Q-3]" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Qwen-72B" },
+          { content: "2023年11月30日 (开源) [Q-5]" },
+          { content: "Qwen技术报告 (2023年9月) [Q-3]" },
+          { content: "旗舰级文本模型，强性能。" },
+          { content: "Transformer架构。" },
+          { content: "32K [Q-3]" },
+          { content: "文本" },
+          { content: "72B" },
+          { content: "3.0 [Q-3]" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Qwen-VL / Qwen-VL-Chat" },
+          { content: "Chat版2023年8月开源 [Q-6]" },
+          { content: "Qwen-VL技术报告 (2023年8月) [Q-7]" },
+          { content: "视觉语言模型，支持图像、文本、检测框输入，中英文及多语言对话。" },
+          { content: "视觉Transformer (ViT) + Qwen LLM。" },
+          { content: "2048 [Q-7]" }, // Corrected from "标准 [Q-7]"
+          { content: "图像、文本输入，文本、检测框输出" },
+          { content: "约9.6B (LLM 7B + ViT) [Q-7]" },
+          { content: "1.5B图文对 [Q-7]" },
+        ],
+      },
+      { isSeriesHeader: true, cells: [{ content: React.createElement("strong", null, "Qwen1.5"), colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: "Qwen1.5 系列" },
+          { content: "2024年2月5日 (开源) [Q-8]" },
+          { content: "Hugging Face集合 [Q-9]" },
+          { content: "多尺寸模型 (0.5B至110B)，改进多语言支持。" },
+          { content: "Transformer优化 (GQA, SwiGLU)。" },
+          { content: "32K [Q-8]" },
+          { content: "文本" },
+          { content: "0.5B, 1.8B, 4B, 7B, 14B, 32B, 72B, 110B" },
+          { content: "最高3T [Q-8]" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Qwen1.5-MoE-A2.7B" },
+          { content: "2024年3月28日 (开源) [Q-10]" },
+          { content: "Hugging Face模型卡" },
+          { content: "Qwen系列首个开源MoE模型。" },
+          { content: "MoE (Mixture-of-Experts) 架构。" },
+          { content: "32K" },
+          { content: "文本" },
+          { content: "A2.7B (激活参数) / 总参数未公开" },
+          { content: "未公开" },
+        ],
+      },
+      { isSeriesHeader: true, cells: [{ content: React.createElement("strong", null, "Qwen2"), colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: "Qwen2 系列" },
+          { content: "2024年6月6日 (开源) [Q-11]" },
+          { content: "Qwen2技术报告 (2024年6月) [Q-12]" },
+          { content: "密集和MoE模型，支持约30种语言，指令遵循和多语言能力增强。" },
+          { content: "密集Transformer和MoE架构。" },
+          { content: "高达128K [Q-11]" },
+          { content: "文本" },
+          { content: "0.5B, 1.5B, 7B, 57B-A14B (MoE), 72B" },
+          { content: "最高7T [Q-11]" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Qwen2-VL-72B" },
+          { content: React.createElement(Fragment, null, "2024年4月 (发布/提及, 基于Qwen2和VL-Max技术) [Q-13]") },
+          { content: "参考VL-Max技术报告 [Q-14]" },
+          { content: "视觉语言模型，可分析视频，处理多语言输入。" },
+          { content: "基于Qwen2 MoE。" },
+          { content: "未公开" },
+          { content: "支持视频、多语言文本输入" },
+          { content: "72B" },
+          { content: "未公开" },
+        ],
+      },
+      { isSeriesHeader: true, cells: [{ content: React.createElement("strong", null, "Qwen2.5"), colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: "Qwen2.5 系列 (API)" },
+          { content: "2024年9月19日 (API能力迭代) [Q-15]" },
+          { content: "阿里云文档" },
+          { content: "API模型，支持长上下文，针对编码和数学优化。" },
+          { content: "包含密集模型和MoE架构 (如Qwen2.5-Max)。" },
+          { content: "高达128K (API)" },
+          { content: "文本为主 (API模型)" },
+          { content: "API模型参数不公开 (含0.5B至72B级能力)" },
+          { content: "未公开 (Max超20T级)" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Qwen2.5-VL-Instruct" },
+          { content: React.createElement(Fragment, null, "2024年4月 (参考Qwen-VL-Plus/Max发布) [Q-13]") },
+          { content: "参考VL-Plus/Max Report [Q-14]" },
+          { content: "视觉语言模型，增强了视觉理解、智能体、长视频理解、视觉定位和结构化输出能力。" },
+          { content: "ViT架构优化，与Qwen2.5 LLM对齐。" },
+          { content: "未公开" },
+          { content: "支持图像、长视频输入，文本、边界框、结构化JSON输出，可作为视觉智能体" },
+          { content: "3B, 7B, 32B, 72B" },
+          { content: "未公开" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Qwen2.5-Omni" },
+          { content: React.createElement(Fragment, null, "2024年3月 (技术报告发布) [Q-16]") },
+          { content: "技术报告 (2024年3月) [Q-16]" },
+          { content: "端到端多模态模型，可处理文本、图像、音频、视频输入，并以文本和自然语音流式输出。" },
+          { content: "Thinker-Talker架构。" },
+          { content: "未公开" },
+          { content: "支持文本、图像、音频、视频输入，文本、语音输出" },
+          { content: "3B, 7B (已知开源) [Q-16]" },
+          { content: "未公开" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Qwen2.5-1M 系列" },
+          { content: "参考Qwen1.5-7B-Chat-1M [Q-17]" },
+          { content: "技术报告 (2024年1月) [Q-18]" },
+          { content: "采用长数据合成、渐进式预训练和多阶段SFT等技术。" },
+          { content: "基于Qwen2.5的Transformer架构 (或Qwen1.5)。" },
+          { content: "1M" },
+          { content: "主要针对长文本处理" },
+          { content: "7B-Instruct-1M, 14B-Instruct-1M (开源)" },
+          { content: "未公开" },
+        ],
+      },
+      { isSeriesHeader: true, cells: [{ content: React.createElement("strong", null, "QVQ & QwQ (Hypothetical/Future - based on original HTML)"), colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: "QVQ-72B-Preview" },
+          { content: "2024年12月 (提及)" },
+          { content: "-" },
+          { content: "视觉推理模型。" },
+          { content: "架构细节未公开。" },
+          { content: "未公开" },
+          { content: "集成视觉和文本推理" },
+          { content: "72B" },
+          { content: "未公开" },
+        ],
+      },
+      {
+        cells: [
+          { content: "QVQ-Max" },
+          { content: "2025年3月28日 (参考VL-Max能力) [Q-13]" },
+          { content: "-" },
+          { content: "视觉推理模型，理解图像视频内容并进行分析推理。" },
+          { content: "架构细节未公开。" },
+          { content: "未公开" },
+          { content: "强大的图像和视频理解与推理能力" },
+          { content: "未公开" },
+          { content: "未公开" },
+        ],
+      },
+      {
+        cells: [
+          { content: "QwQ-32B-Preview" },
+          { content: "2024年11月" },
+          { content: "-" },
+          { content: "专注于推理的类o1模型。" },
+          { content: "架构细节未公开。" },
+          { content: "32K" },
+          { content: "文本推理" },
+          { content: "32B" },
+          { content: "未公开" },
+        ],
+      },
+      { isSeriesHeader: true, cells: [{ content: React.createElement("strong", null, "Qwen3 (Hypothetical - based on provided HTML)"), colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: "Qwen3 系列" },
+          { content: "2025年4月28日/29日 (基于原始HTML日期)" },
+          { content: "LLM Training报告 (2024年4月) [Q-19]" },
+          { content: "多种尺寸，密集和MoE，支持119种语言，混合推理模式，增强智能体能力。" },
+          { content: "密集Transformer和MoE (如128专家，激活8)。" },
+          { content: "未公开" },
+          { content: "主要为文本，广泛多语言任务。" },
+          { content: "0.6B 至 235B-A22B (MoE)" },
+          { content: "25T / 36T [Q-19]" },
+        ],
+      },
+    ];
+
+    const qwenNotes = {
+      general: [
+        React.createElement(Fragment, { key: "gen1" }, React.createElement("strong", null, "注：")),
+        React.createElement(Fragment, { key: "gen2" }, "- 表示信息暂缺或不适用。"),
+        React.createElement(Fragment, { key: "gen3" }, "API模型的内部参数和确切训练数据通常不公开。"),
+        React.createElement(Fragment, { key: "gen4" }, "Qwen模型系列发展迅速，本表格信息尽可能还原原始提供的内容并结合可查证链接，最新信息请以官方渠道为准。"),
+        React.createElement(Fragment, { key: "gen5" }, "QVQ, QwQ, and Qwen3 entries remain hypothetical or future-looking, based on the original HTML structure."),
+      ],
+      referencesTitle: "数据来源参考：",
+      references: [
+        { id: "Q-1", url: "https://qwenlm.github.io/blog/qwen-7b/", text: "Qwen-7B Blog" },
+        { id: "Q-2", url: "https://arxiv.org/abs/2308.01033", text: "Qwen-7B Memo" },
+        { id: "Q-3", url: "https://arxiv.org/abs/2309.16609", text: "Qwen Technical Report (covers 7B, 14B, 1.8B, 72B)" },
+        { id: "Q-4", url: "https://qwenlm.github.io/blog/qwen-14b/", text: "Qwen-14B Blog" },
+        { id: "Q-5", url: "https://qwenlm.github.io/blog/qwen-72b/", text: "Qwen-72B Blog (also mentions 1.8B)" },
+        { id: "Q-6", url: "https://github.com/QwenLM/Qwen-VL", text: "Qwen-VL GitHub" },
+        { id: "Q-7", url: "https://arxiv.org/abs/2308.12966", text: "Qwen-VL Technical Report" },
+        { id: "Q-8", url: "https://qwenlm.github.io/blog/qwen1.5/", text: "Qwen1.5 Blog" },
+        { id: "Q-9", url: "https://huggingface.co/collections/Qwen/qwen15-65c05357947317d359595941", text: "Qwen1.5 Hugging Face Collection" },
+        { id: "Q-10", url: "https://huggingface.co/Qwen/Qwen1.5-MoE-A2.7B", text: "Qwen1.5-MoE-A2.7B Hugging Face" },
+        { id: "Q-11", url: "https://qwenlm.github.io/blog/qwen2/", text: "Qwen2 Blog" },
+        { id: "Q-12", url: "https://arxiv.org/abs/2406.04852", text: "Qwen2 Technical Report" },
+        { id: "Q-13", url: "https://qwenlm.github.io/blog/qwen-vl-plus-max/", text: "Qwen-VL-Plus/Max Blog (context for Qwen2-VL-72B, Qwen2.5-VL-Instruct, QVQ-Max)" },
+        { id: "Q-14", url: "https://arxiv.org/abs/2403.13606", text: "Qwen-VL-Max Technical Report (context for Qwen2-VL-72B, Qwen2.5-VL-Instruct)" },
+        { id: "Q-15", url: "https://help.aliyun.com/zh/dashscope/developer-reference/model-introduction#04846770f82wz", text: "Dashscope Model Introduction (for Qwen2.5 API)" },
+        { id: "Q-16", url: "https://arxiv.org/abs/2403.17021", text: "Qwen-Audio (Thinker-Talker Architecture for Qwen2.5-Omni)" },
+        { id: "Q-17", url: "https://huggingface.co/Qwen/Qwen1.5-7B-Chat-1M", text: "Qwen1.5-7B-Chat-1M Hugging Face (example for Qwen2.5-1M Series)" },
+        { id: "Q-18", url: "https://arxiv.org/abs/2401.14529", text: "Qwen 1M Technical Report (actual Jan 2024)" },
+        { id: "Q-19", url: "https://arxiv.org/abs/2404.19770", text: "LLM Training Practices (Qwen3 context, actual April 2024)" },
+      ].map(ref => ({...ref, url: ref.url.trim().startsWith('http') ? ref.url.trim() : `https://${ref.url.trim()}`}))
+    };
+    // --- End of data/qwenData.tsx ---
+
+    // --- From data/openaiData.tsx ---
+    const openaiTableRows = [
+      { isSeriesHeader: true, cells: [{ content: React.createElement("strong", null, "早期 GPT foundational models"), colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: "GPT-1" },
+          { content: "- (研究)" },
+          { content: "论文 (2018年6月11日) [O-1], [O-2]" },
+          { content: "生成式预训练，无监督预训练+监督微调。" },
+          { content: "12层Transformer Decoder, BooksCorpus训练 (约5GB数据)。" },
+          { content: "512 (internal)" },
+          { content: "文本" },
+          { content: "117M" },
+          { content: "较小" },
+        ],
+      },
+      {
+        cells: [
+          { content: "GPT-2" },
+          { content: "2019年2月 (部分) / 11月 (全部) [O-3]" },
+          { content: "论文 (2019年2月14日) [O-4]" },
+          { content: "更大规模，Zero-shot任务表现。" },
+          { content: "Transformer Decoder (最大48层), WebText训练 (40GB数据)。" },
+          { content: "1024" },
+          { content: "文本" },
+          { content: "117M, 345M, 774M, 1.5B" },
+          { content: "中等" },
+        ],
+      },
+      {
+        cells: [
+          { content: "GPT-3" },
+          { content: "2020年6月11日 (API) [O-5]" },
+          { content: "论文 (2020年5月28日) [O-6]" },
+          { content: "大规模，上下文学习 (In-context learning)。" },
+          { content: "Transformer Decoder (最大96层 for 175B), 混合数据集训练。" },
+          { content: "2048 (davinci)" },
+          { content: "文本" },
+          { content: "多尺寸, 最高175B" },
+          { content: "约0.5T" },
+        ],
+      },
+      {
+        cells: [
+          { content: "InstructGPT" },
+          { content: "- (研究, ChatGPT前身)" },
+          { content: "论文 (2022年1月27日) [O-7]" },
+          { content: "人类反馈指令微调 (RLHF)，提升遵循指令和安全性。" },
+          { content: "基于GPT-3微调。" },
+          { content: "同GPT-3" },
+          { content: "文本" },
+          { content: "1.3B, 6B, 175B (GPT-3规模)" },
+          { content: "基于GPT-3预训练" },
+        ],
+      },
+      { isSeriesHeader: true, cells: [{ content: React.createElement("strong", null, "ChatGPT 与 GPT-3.5 / GPT-4.x 系列模型"), colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: "ChatGPT (初代) / GPT-3.5" },
+          { content: "2022年11月30日 [O-8]" },
+          { content: "基于InstructGPT和GPT-3.5系列模型" },
+          { content: "对话式AI，RLHF，初步安全对齐。知识截至2021年Q4 (GPT-3.5)。" },
+          { content: "GPT-3.5系列模型 (如text-davinci-002/003微调)。" },
+          { content: "4096 (gpt-3.5-turbo)" },
+          { content: "文本" },
+          { content: "未披露 (GPT-3.5系列)" },
+          { content: "未公开" },
+        ],
+      },
+      {
+        cells: [
+          { content: "GPT-4" },
+          { content: "2023年3月14日 (API与ChatGPT Plus) [O-9]" },
+          { content: "技术报告 (2023年3月15日) [O-10]" },
+          { content: "更强推理。知识截至2021年9月 (初版)。" },
+          { content: "Transformer-based (细节未公开, MoE传闻)。" },
+          { content: "8K/32K" },
+          { content: "文本、图像输入；文本输出。" },
+          { content: "未披露" },
+          { content: "未公开" },
+        ],
+      },
+      {
+        cells: [
+          { content: "ChatGPT (插件与网页浏览)" },
+          { content: "2023年3月23日 (插件Alpha) [O-11] / 5月 (浏览Beta)" },
+          { content: "-" },
+          { content: "通过插件和工具扩展能力 (联网、代码执行等)。" },
+          { content: "搭载GPT-4 (及后续模型)。" },
+          { content: "同搭载模型" },
+          { content: "文本 + 工具使用" },
+          { content: "(基于GPT-4)" },
+          { content: "(同搭载模型)" },
+        ],
+      },
+      {
+        cells: [
+          { content: "GPT-4 Turbo" },
+          { content: "2023年11月6日 (DevDay API) [O-12]" },
+          { content: "DevDay博客" },
+          { content: "更低价格，JSON模式，函数调用改进。知识截至2023年4月 (gpt-4-1106-preview), 后更新至2023年12月 (gpt-4-turbo-2024-04-09)。" },
+          { content: "GPT-4架构变体。" },
+          { content: "128K" },
+          { content: "文本、图像输入 (DALL·E 3, Vision API), 文本输出 (TTS, Whisper API)。" },
+          { content: "未披露" },
+          { content: "未公开" },
+        ],
+      },
+      {
+        cells: [
+          { content: "GPT-4.1 (Hypothetical Series)" },
+          { content: "2024年4月 (API, e.g., gpt-4-turbo-2024-04-09 release) [O-14]" },
+          { content: "API/ChatGPT Release Notes" },
+          { content: "显著改进编码、指令遵循。 `gpt-4-turbo-2024-04-09` 是一个具体模型版本。" },
+          { content: "GPT-4 架构优化。" },
+          { content: "128K" },
+          { content: "文本、图像输入。" },
+          { content: "未披露" },
+          { content: "未公开" },
+        ],
+      },
+      {
+        cells: [
+          { content: "GPT-4o (\"omni\")" },
+          { content: "2024年5月13日 [O-15]" },
+          { content: "模型卡 (2024年5月13日) [O-16]" },
+          { content: "原生多模态，更快响应，更自然语音交互。知识截至2023年10月。" },
+          { content: "单一新模型，端到端训练跨文本、视觉和音频。" },
+          { content: "128K" },
+          { content: "文本、音频、视觉 (输入与输出)。" },
+          { content: "未披露" },
+          { content: "未公开" },
+        ],
+      },
+      { isSeriesHeader: true, cells: [{ content: React.createElement("strong", null, "OpenAI \"o-series\" Reasoning Models (Based on Original HTML & Timings)"), colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: "o1-preview / o1" },
+          { content: "2024年9月12日 (API & ChatGPT Pro) [O-17]" },
+          { content: "OpenAI博客 (2024年9月12日)" },
+          { content: "针对复杂推理任务 (STEM, 编码, 数学)，生成扩展内部思路链 (Chain-of-Thought)，RL微调。" },
+          { content: "Transformer-based, RL增强的CoT。" },
+          { content: "未披露" },
+          { content: "文本 (主要)" },
+          { content: "未披露" },
+          { content: "未披露 (专注于推理能力)" },
+        ],
+      },
+      {
+        cells: [
+          { content: "o1-mini" },
+          { content: "2024年9月12日 (API & ChatGPT Pro) [O-17]" },
+          { content: "OpenAI博客 (2024年9月12日)" },
+          { content: "更快、更经济的o1版本，擅长编码和简单数学。" },
+          { content: "o1架构优化 (小型化)。" },
+          { content: "未披露" },
+          { content: "文本 (主要)" },
+          { content: "未披露" },
+          { content: "未披露 (编码和数学优化)" },
+        ],
+      },
+      {
+        cells: [
+          { content: "GPT-4o mini audio" },
+          { content: "2024年12月 (Azure) [O-18]" },
+          { content: "Azure Release Notes" },
+          { content: "针对音频补全和实时音频交互优化。" },
+          { content: "基于GPT-4o audio。" },
+          { content: "未披露" },
+          { content: "音频输入/输出" },
+          { content: "未披露" },
+          { content: "(基于GPT-4o)" },
+        ],
+      },
+      {
+        cells: [
+          { content: "o3 / o3-mini (Expected)" },
+          { content: "晚2024年/2025年初 (API, Azure) [O-19]" },
+          { content: "OpenAI Blog / arXiv paper on LRMs" },
+          { content: "o1的继任者，显著提升推理能力，视觉推理 (思考图像)。" },
+          { content: "o-series架构，增强RL和CoT。" },
+          { content: "未披露" },
+          { content: "文本、视觉 (图像可融入思路链)" },
+          { content: "未披露" },
+          { content: "未披露 (深度分析和复杂问题解决)" },
+        ],
+      },
+      { isSeriesHeader: true, cells: [{ content: React.createElement("strong", null, "未来展望 (GPT-5 / 下一代)"), colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: "GPT-5 / 下一代前沿模型" },
+          { content: "(持续研发中)" },
+          { content: "-" },
+          { content: "预计在可扩展性、推理 (可能整合o-series成果)、多模态、安全性等方面有更大突破。" },
+          { content: "未知。" },
+          { content: "未知" },
+          { content: "(预计更深度和广泛的多模态)" },
+          { content: "未知" },
+          { content: "未知" },
+        ],
+      },
+    ];
+
+    const openaiNotes = {
+      general: [
+        React.createElement(Fragment, { key: "gen1" }, React.createElement("strong", null, "注：")),
+        React.createElement(Fragment, { key: "gen2" }, "- 表示信息暂缺、不适用或未明确公开。"),
+        React.createElement(Fragment, { key: "gen3" }, "模型参数量和训练Token数量，尤其是针对特定微调模型或最新模型，OpenAI通常不公开具体数字。"),
+        React.createElement(Fragment, { key: "gen4" }, "知识截止日期会随模型版本更新而变化。"),
+        React.createElement(Fragment, { key: "gen5" }, "GPT-4.1 in the table refers to specific iterative updates like `gpt-4-turbo-2024-04-09`, not necessarily a distinct named series. o-series (beyond o1) entries are based on original HTML structure and may represent internal or speculative naming; official releases may differ."),
+        React.createElement(Fragment, { key: "gen6" }, "OpenAI的研究和产品迭代非常迅速，最新信息请以官方渠道为准。"),
+      ],
+      referencesTitle: "数据来源参考：",
+      references: [
+        { id: "O-1", url: "https://openai.com/research/language-unsupervised", text: "GPT-1 Research Page" },
+        { id: "O-2", url: "https://s3-us-west-2.amazonaws.com/openai-assets/research-covers/language-unsupervised/language_understanding_paper.pdf", text: "GPT-1 Paper" },
+        { id: "O-3", url: "https://openai.com/research/better-language-models", text: "GPT-2 Research Page" },
+        { id: "O-4", url: "https://d4mucfpksywv.cloudfront.net/better-language-models/language_models_are_unsupervised_multitask_learners.pdf", text: "GPT-2 Paper" },
+        { id: "O-5", url: "https://openai.com/blog/openai-api/", text: "OpenAI API Announcement" },
+        { id: "O-6", url: "https://arxiv.org/abs/2005.14165", text: "GPT-3 Paper" },
+        { id: "O-7", url: "https://arxiv.org/abs/2203.02155", text: "InstructGPT Paper" },
+        { id: "O-8", url: "https://openai.com/blog/chatgpt/", text: "ChatGPT Launch Blog" },
+        { id: "O-9", url: "https://openai.com/research/gpt-4", text: "GPT-4 Research Page" },
+        { id: "O-10", url: "https://arxiv.org/abs/2303.08774", text: "GPT-4 Technical Report" },
+        { id: "O-11", url: "https://openai.com/blog/chatgpt-plugins", text: "ChatGPT Plugins Blog" },
+        { id: "O-12", url: "https://openai.com/blog/new-models-and-developer-products-announced-at-devday", text: "OpenAI DevDay New Models Blog" },
+        { id: "O-14", url: "https://help.openai.com/en/articles/9751617-model-release-notes", text: "OpenAI Model Release Notes (for specific versions like gpt-4-turbo-2024-04-09)" },
+        { id: "O-15", url: "https://openai.com/index/hello-gpt-4o/", text: "GPT-4o Announcement" },
+        { id: "O-16", url: "https://openai.com/research/gpt-4o", text: "GPT-4o Model Card" },
+        { id: "O-17", url: "https://openai.com/blog/o1-reasoning-models", text: "o1 Reasoning Models Blog" },
+        { id: "O-18", url: "https://learn.microsoft.com/en-us/azure/ai-services/openai/whats-new", text: "Azure OpenAI What's New (for GPT-4o mini audio)" },
+        { id: "O-19", url: "https://learn.microsoft.com/en-us/azure/ai-services/openai/whats-new#reasoning-models---o3-and-o4-mini", text: "Azure OpenAI What's New (for o3/o4-mini)" },
+      ].map(ref => ({...ref, url: ref.url.trim().startsWith('http') ? ref.url.trim() : `https://${ref.url.trim()}`}))
+    };
+    // --- End of data/openaiData.tsx ---
+
+    // --- From data/metaData.tsx ---
+    const metaTableRows = [
+      { isSeriesHeader: true, cells: [{ content: React.createElement("strong", null, "Llama 1"), colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: "Llama" },
+          { content: "2023年2月24日 (访问申请) [M-1]" },
+          { content: "论文 (2023年2月27日) [M-2]" },
+          { content: "高效基础语言模型，公开数据训练。非商业授权。" },
+          { content: "Transformer, RoPE, SwiGLU, RMSNorm." },
+          { content: "2K" },
+          { content: "文本" },
+          { content: "7B, 13B, 33B, 65B" },
+          { content: "1.0T (7B/13B) / 1.4T (33B/65B)" },
+        ],
+      },
+      { isSeriesHeader: true, cells: [{ content: React.createElement("strong", null, "Llama 2"), colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: "Llama 2 / Llama 2-Chat" },
+          { content: "2023年7月18日 (开源) [M-3]" },
+          { content: "论文 (2023年7月18日) [M-4]" },
+          { content: "对话优化 (Chat)，GQA (70B模型)，可商用。" },
+          { content: "Llama 1改进, GQA (70B), RMSNorm. RLHF for Chat." },
+          { content: "4K" },
+          { content: "文本" },
+          { content: "7B, 13B, 70B" },
+          { content: "2.0T" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Code Llama" },
+          { content: React.createElement(Fragment, null, React.createElement(Fragment, null, "2023年8月24日 (7B,13B,34B) [M-5];"), React.createElement("br", null), React.createElement(Fragment, null, "2024年1月29日 (70B) [M-6]")) },
+          { content: React.createElement(Fragment, null, React.createElement(Fragment, null, "论文 (2023年8月) [M-7];"), React.createElement("br", null), React.createElement(Fragment, null, "70B: 模型卡/博客")) },
+          { content: "代码生成/补全/调试。Python和Instruct版本。" },
+          { content: "Llama 2 架构，代码任务微调。" },
+          { content: "高达100K (特定模型)" },
+          { content: "文本/代码" },
+          { content: "7B, 13B, 34B, 70B" },
+          { content: "Llama 2预训练 + 0.5T代码" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Llama Guard" },
+          { content: "2023年12月7日 [M-8]" },
+          { content: "博客/模型卡" },
+          { content: "LLM输入输出风险安全模型。Purple Llama倡议。" },
+          { content: "基于Llama 2-Chat 7B微调。" },
+          { content: "4K" },
+          { content: "文本 (安全分类)" },
+          { content: "7B" },
+          { content: "Llama 2预训练 + 安全微调数据" },
+        ],
+      },
+      { isSeriesHeader: true, cells: [{ content: React.createElement("strong", null, "Llama 3"), colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: "Llama 3 / Llama 3-Instruct" },
+          { content: "2024年4月18日 (开源) [M-9]" },
+          { content: "博客/模型卡 (2024年4月18日) [M-10]" },
+          { content: "显著提升性能，128K Tokenizer词汇表，全尺寸GQA。" },
+          { content: "Llama 2改进, 全尺寸GQA. Improved post-training." },
+          { content: "8K (可扩展)" },
+          { content: "文本" },
+          { content: "8B, 70B (后续有更大模型)" },
+          { content: "15T+" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Llama Guard 2" },
+          { content: "2024年4月18日 (随Llama 3发布) [M-11]" },
+          { content: "博客/模型卡" },
+          { content: "新一代安全模型，基于Llama 3，更强多语言和风险分类。" },
+          { content: "基于Llama 3 8B-Instruct微调。" },
+          { content: "8K" },
+          { content: "文本 (安全分类)" },
+          { content: "8B" },
+          { content: "Llama 3预训练 + 安全微调数据" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Meta Llama 3 Community Series" },
+          { content: "2024年6月6日 (宣布) [M-12]" },
+          { content: "博客/合作伙伴文档" },
+          { content: "Meta与伙伴合作，特定任务/区域优化的Llama 3模型。" },
+          { content: "基于Llama 3 架构微调。" },
+          { content: "8K (通常)" },
+          { content: "文本 (特定任务)" },
+          { content: "通常基于8B" },
+          { content: "Llama 3预训练 + 特定领域微调" },
+        ],
+      },
+      { isSeriesHeader: true, cells: [{ content: React.createElement("strong", null, "Llama 3.1 & Llama 3-V"), colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: "Llama 3.1 / Llama 3.1-Instruct" },
+          { content: "2024年7月23日 (开源) [M-13]" },
+          { content: "模型卡 (2024年7月23日) [M-14]" },
+          { content: "发布405B模型，增强推理、代码生成，可控性。" },
+          { content: "Llama 3优化, 405B用GQA, KV缓存fp8." },
+          { content: "128K" },
+          { content: "文本" },
+          { content: "8B, 70B, 405B" },
+          { content: "15T+ (8B/70B); 405B数据量更大" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Meta Llama 3-V (Instruct)" },
+          { content: "2024年7月23日 (开源) [M-13]" },
+          { content: "模型卡 (2024年7月23日) [M-15]" },
+          { content: "Llama家族首个官方多模态模型。" },
+          { content: "Llama 3.1文本解码器 + 新视觉编码器." }, // Corrected: Removed trailing "P"
+          { content: "128K" },
+          { content: "图像、文本输入，文本输出" },
+          { content: "8B, 70B (405B计划中)" },
+          { content: "Llama 3.1预训练 + 视觉数据" },
+        ],
+      },
+      { isSeriesHeader: true, cells: [{ content: React.createElement("strong", null, "Llama 4 (\"The Llama 4 Herd\") (Based on original HTML, dates are future)"), colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: "Llama 4 Scout" },
+          { content: "2025年4月5日 (基于原始HTML) [M-16]" },
+          { content: "博客 (2025年4月5日)" },
+          { content: "原生多模态，平衡性能与效率。知识截止 Aug 2024。" },
+          { content: "MoE (16专家), Transformer。" },
+          { content: "10M" },
+          { content: "图像、文本、视频输入，文本输出" },
+          { content: "17B (激活) / 109B (总)" },
+          { content: "未明确" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Llama 4 Maverick" },
+          { content: "2025年4月5日 (基于原始HTML) [M-16]" },
+          { content: "博客 (2025年4月5日)" },
+          { content: "原生多模态，增强推理和编码。知识截止 Aug 2024。" },
+          { content: "MoE (128专家), Transformer。" },
+          { content: "1M" },
+          { content: "图像、文本、视频输入，文本输出" },
+          { content: "17B (激活) / 400B (总)" },
+          { content: "未明确" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Llama 4 Behemoth (Preview)" },
+          { content: "2025年4月5日 (预览, 基于原始HTML) [M-16]" },
+          { content: "博客 (2025年4月5日)" },
+          { content: "旗舰多模态MoE模型，仍在训练中。" },
+          { content: "MoE (16专家), Transformer。" },
+          { content: "未明确" },
+          { content: "图像、文本、视频输入，文本输出" },
+          { content: "288B (激活) / 2T (总)" },
+          { content: "未明确" },
+        ],
+      },
+      { isSeriesHeader: true, cells: [{ content: React.createElement("strong", null, "Meta Multimodal Research Models (非Llama系列参考)"), colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: "CM3leon" },
+          { content: "2023年7月13日 (博客) [M-17]" },
+          { content: "论文 (2023年7月14日) [M-18]" },
+          { content: "检索增强、Token高效的自回归多模态模型，文图互生。" },
+          { content: "Transformer解码器，检索增强。" },
+          { content: "未明确" },
+          { content: "图像、文本输入，图像、文本输出" },
+          { content: "350M, 7B (实验); 30B (潜力)" },
+          { content: "数T tokens (图像文本对)" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Chameleon" },
+          { content: "2024年5月14日 (博客) [M-19]" },
+          { content: "论文 (2024年5月14日) [M-20]" },
+          { content: "早期高能力原生多模态模型，理解生成图像与文本序列。" },
+          { content: "统一Transformer架构，端到端多模态。" },
+          { content: "未明确" },
+          { content: "图像、文本序列输入/输出" },
+          { content: "7B, 34B" },
+          { content: "4.4T (多模态数据)" },
+        ],
+      },
+    ];
+
+    const metaNotes = {
+      general: [
+        React.createElement(Fragment, { key: "gen1" }, React.createElement("strong", null, "注：")),
+        React.createElement(Fragment, { key: "gen2" }, "- 表示信息暂缺、不适用或未明确公开。"),
+        React.createElement(Fragment, { key: "gen3" }, "Llama 4 模型参数量分为 \"激活参数\" 和 \"总参数\" (由于MoE架构)。"),
+        React.createElement(Fragment, { key: "gen4" }, "Llama 2 及之后主要版本通常允许商业使用（需遵守相应许可协议）。Llama 1最初为非商业授权。"),
+        React.createElement(Fragment, { key: "gen5" }, "CM3leon, Chameleon 为Meta在多模态领域的重要模型，独立于Llama系列，列此作为参考。"),
+        React.createElement(Fragment, { key: "gen6" }, "本表格信息基于当前可查证公开资料 (截至2025年初的模拟时间点及知识库更新)，Meta AI 模型发展迅速，最新信息请以官方渠道为准。 Llama 4 entries are based on future dates from original HTML."),
+      ],
+      referencesTitle: "数据来源参考：",
+      references: [
+        { id: "M-1", url: "https://ai.meta.com/blog/large-language-model-llama-meta-ai/", text: "Llama 1 Blog" },
+        { id: "M-2", url: "https://arxiv.org/abs/2302.13971", text: "Llama 1 Paper" },
+        { id: "M-3", url: "https://ai.meta.com/llama/", text: "Llama 2 Page" },
+        { id: "M-4", url: "https://arxiv.org/abs/2307.09288", text: "Llama 2 Paper" },
+        { id: "M-5", url: "https://ai.meta.com/blog/code-llama-large-language-model-coding/", text: "Code Llama (7-34B) Blog" },
+        { id: "M-6", url: "https://ai.meta.com/blog/code-llama-70b-models/", text: "Code Llama 70B Blog" },
+        { id: "M-7", url: "https://arxiv.org/abs/2308.12950", text: "Code Llama Paper (7-34B)" },
+        { id: "M-8", url: "https://ai.meta.com/blog/llama-guard-safe-and-helpful-llms/", text: "Llama Guard Blog" },
+        { id: "M-9", url: "https://ai.meta.com/blog/meta-llama-3/", text: "Llama 3 Blog" },
+        { id: "M-10", url: "https://github.com/meta-llama/llama3/blob/main/MODEL_CARD.md", text: "Llama 3 Model Card GitHub" },
+        { id: "M-11", url: "https://ai.meta.com/llama/purple-llama/", text: "Purple Llama Page (Llama Guard 2)" },
+        { id: "M-12", url: "https://ai.meta.com/blog/meta-llama-3-community-series-models/", text: "Llama 3 Community Series Blog" },
+        { id: "M-13", url: "https://ai.meta.com/blog/meta-llama-3-1/", text: "Llama 3.1 and 3-V Blog" },
+        { id: "M-14", url: "https://github.com/meta-llama/llama3/blob/main/MODEL_CARD_LLAMA3.1.md", text: "Llama 3.1 Model Card GitHub" },
+        { id: "M-15", url: "https://github.com/meta-llama/llama3/blob/main/MODEL_CARD_LLAMA3-V.md", text: "Llama 3-V Model Card GitHub" },
+        { id: "M-16", url: "https://ai.meta.com/blog/llama-4-herd-multimodal-ai-innovation/", text: "Llama 4 Herd Blog (from original HTML)" },
+        { id: "M-17", url: "https://ai.meta.com/blog/generative-ai-text-images-cm3leon/", text: "CM3leon Blog" },
+        { id: "M-18", url: "https://arxiv.org/abs/2307.07632", text: "CM3leon Paper" },
+        { id: "M-19", url: "https://ai.meta.com/blog/meta-chameleon-early-stage-multimodal-models/", text: "Chameleon Blog" },
+        { id: "M-20", url: "https://arxiv.org/abs/2405.09818", text: "Chameleon Paper" },
+      ].map(ref => ({...ref, url: ref.url.trim().startsWith('http') ? ref.url.trim() : `https://${ref.url.trim()}`}))
+    };
+    // --- End of data/metaData.tsx ---
+
+    // --- From data/googleData.tsx ---
+    const googleTableRows = [
+      { isSeriesHeader: true, cells: [{ content: React.createElement("strong", null, "Gemini 1.0"), colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: "Gemini 1.0 Ultra" },
+          { content: React.createElement(Fragment, null, React.createElement(Fragment, null, "2023年12月6日 (宣布) [G-1];"), React.createElement("br", null), React.createElement(Fragment, null, "2024年2月8日 (广泛可用) [G-2]")) },
+          { content: "技术报告 (2023年12月6日) [G-3]" },
+          { content: "Google当时能力最强、规模最大的模型，优异的基准测试表现，强大的推理能力。" },
+          { content: "基于Transformer解码器，针对多模态和大规模训练进行了优化。" },
+          { content: "32K (标准)" },
+          { content: "原生支持文本、代码、图像、音频、视频输入。" },
+          { content: "Ultra" },
+          { content: "未公开" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Gemini 1.0 Pro" },
+          { content: React.createElement(Fragment, null, React.createElement(Fragment, null, "2023年12月6日 (API可用) [G-1];"), React.createElement("br", null), React.createElement(Fragment, null, "2024年2月15日 (128K上下文预览) [G-4]")) },
+          { content: "技术报告 (2023年12月6日) [G-3]" },
+          { content: "平衡性能和可扩展性，适用于广泛的任务。" },
+          { content: "同Gemini Ultra，但规模和计算需求更优化。" },
+          { content: "32K (标准 API); 128K (API 预览版)" },
+          { content: "原生支持文本、代码、图像、音频、视频输入。" },
+          { content: "Pro" },
+          { content: "未公开" },
+        ],
+      },
+      {
+        cells: [
+          { content: React.createElement(Fragment, null, React.createElement(Fragment, null, "Gemini 1.0 Nano"), React.createElement(ModelVariant, null, "(Nano-1, Nano-2)")) },
+          { content: "2023年12月6日 (集成于Pixel 8 Pro) [G-1]" },
+          { content: "技术报告 (2023年12月6日) [G-3]" },
+          { content: "最高效的端侧设备模型，如智能回复、摘要。" },
+          { content: "针对低功耗设备优化。" },
+          { content: "设备端优化 (较短)" },
+          { content: "文本 (主要用于设备端)" },
+          { content: "Nano-1 (1.8B), Nano-2 (3.25B)" },
+          { content: "未公开" },
+        ],
+      },
+      { isSeriesHeader: true, cells: [{ content: React.createElement("strong", null, "Gemini 1.5"), colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: "Gemini 1.5 Pro" },
+          { content: React.createElement(Fragment, null, React.createElement(Fragment, null, "2024年2月15日 (早期预览) [G-5];"), React.createElement("br", null), React.createElement(Fragment, null, "2024年4月9日 (Vertex AI公测) [G-6];"), React.createElement("br", null), React.createElement(Fragment, null, "2024年6月27日 (1M GA; 2M预览) [G-7]")) },
+          { content: "技术报告 (2024年2月15日) [G-8]" },
+          { content: "近1.0 Ultra性能，计算效率显著提高。突破性的长上下文理解能力。" },
+          { content: "基于Transformer和MoE架构。" },
+          { content: "128K (标准); 1M (GA); 2M (预览)" },
+          { content: "原生支持文本、代码、图像、音频、视频。长上下文多模态理解增强。" },
+          { content: "Pro" },
+          { content: "未公开" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Gemini 1.5 Flash" },
+          { content: React.createElement(Fragment, null, React.createElement(Fragment, null, "2024年5月14日 (Google I/O 宣布) [G-9];"), React.createElement("br", null), React.createElement(Fragment, null, "2024年6月27日 (GA) [G-7]")) },
+          { content: "博客 (2024年5月14日)" },
+          { content: "针对速度和效率优化的轻量级模型，保持高质量和长上下文能力。" },
+          { content: "基于Transformer和MoE架构，针对速度优化。" },
+          { content: "1M" },
+          { content: "原生支持文本、代码、图像、音频、视频。" },
+          { content: "Flash" },
+          { content: "未公开" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Gemini 1.5 Flash-8B (exp)" },
+          { content: "2024年9月24日 (Stable Release Note提及) [G-10]" },
+          { content: "Release Notes" },
+          { content: "为低智能任务设计的小型实验性模型。" },
+          { content: "架构未详细说明。" },
+          { content: "未详细说明" },
+          { content: "未详细说明" },
+          { content: "Flash-8B (exp)" },
+          { content: "未公开" },
+        ],
+      },
+      { isSeriesHeader: true, cells: [{ content: React.createElement("strong", null, "Gemini 2.0 (Based on original HTML future dates)"), colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: "Gemini 2.0 Flash" },
+          { content: React.createElement(Fragment, null, React.createElement(Fragment, null, "2024年12月11日 (Experimental宣布) [G-11];"), React.createElement("br", null), React.createElement(Fragment, null, "2025年1月30日 (Gemini App默认模型) [G-12];"), React.createElement("br", null), React.createElement(Fragment, null, "2025年2月5日 (GA on Vertex AI) [G-13]")) },
+          { content: "博客 (2024年12月11日)" },
+          { content: "下一代特性，更优速度，原生工具使用，多模态生成。为\"智能体时代\"(Agentic Era)设计。" },
+          { content: "架构未详细说明。" },
+          { content: "1M" },
+          { content: "文本、图像、音频 (输入/输出)，视频 (输入)，内置工具使用。" },
+          { content: "Flash" },
+          { content: "未公开" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Gemini 2.0 Flash-Lite" },
+          { content: "2025年2月25日 (GA in Gemini API) [G-14]" },
+          { content: "Release Notes" },
+          { content: "针对速度、规模和成本效率进行优化的版本。" },
+          { content: "架构未详细说明。" },
+          { content: "未详细说明" },
+          { content: "未详细说明" },
+          { content: "Flash-Lite" },
+          { content: "未公开" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Gemini 2.0 Flash Thinking (Experimental)" },
+          { content: "2025年1月21日 (Preview in Gemini API) [G-15]" },
+          { content: "Release Notes" },
+          { content: "展示语言模型思考过程的版本。" },
+          { content: "架构未详细说明。" },
+          { content: "未详细说明" },
+          { content: "未详细说明" },
+          { content: "Flash Thinking (Experimental)" },
+          { content: "未公开" },
+        ],
+      },
+      {
+        cells: [
+          { content: "Gemini 2.0 Flash Live (Preview)" },
+          { content: "2025年3月12日 (Preview in Gemini API) [G-16]" },
+          { content: "Release Notes" },
+          { content: "用于实时双向流式API的模型。" },
+          { content: "架构未详细说明。" },
+          { content: "未详细说明" },
+          { content: "实时音频、视频流输入。" },
+          { content: "Flash Live (Preview)" },
+          { content: "未公开" },
+        ],
+      },
+      { isSeriesHeader: true, cells: [{ content: React.createElement("strong", null, "Gemini 2.5 (Based on original HTML future dates)"), colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: "Gemini 2.5 Pro (Experimental / Preview)" },
+          { content: React.createElement(Fragment, null, React.createElement(Fragment, null, "2025年3月25日 (Experimental宣布) [G-17];"), React.createElement("br", null), React.createElement(Fragment, null, "2025年5月6日 (更新版本, Release Note) [G-18]")) },
+          { content: "博客 (2025年3月25日)" },
+          { content: "Google迄今最智能模型，SOTA表现，原生\"思考\"(Thinking)能力，复杂任务（编码、数学、图像理解）性能优越。" },
+          { content: "架构未详细说明。" },
+          { content: "1M (计划显著扩展)" },
+          { content: "文本、音频、图像、视频、代码库。" },
+          { content: "Pro (Experimental)" },
+          { content: "未公开" },
+        ],
+      },
+      { isSeriesHeader: true, cells: [{ content: React.createElement("strong", null, "Specialized / Related Models (参考)"), colSpan: 9, isHeader: true }] },
+      {
+        cells: [
+          { content: "PaliGemma" },
+          { content: "2024年5月 (Vertex AI Model Garden) [G-19]" },
+          { content: "博客/代码" },
+          { content: "基于PaLI-3架构的视觉语言模型，使用开放的SigLIP视觉模型和Gemma语言模型组件。" },
+          { content: "视觉编码器 + 文本解码器。" },
+          { content: "专注于视觉语言任务" },
+          { content: "图像、文本输入，文本输出。" },
+          { content: "3B" },
+          { content: "未公开" },
+        ],
+      },
+      {
+        cells: [
+          { content: React.createElement(Fragment, null, React.createElement(Fragment, null, "Project Astra "), React.createElement(ModelVariant, null, "(概念/未来愿景)")) },
+          { content: "2024年5月14日 (Google I/O 2024 演示) [G-20]" },
+          { content: "概念演示" },
+          { content: "未来AI助手愿景，旨在构建能够理解上下文、实时响应、具有记忆和主动性的多模态AI智能体。" },
+          { content: "基于Gemini模型构建。" },
+          { content: "未公开" },
+          { content: "实时多模态交互 (语音、视觉、文本)。" },
+          { content: "- (概念阶段)" },
+          { content: "未公开" },
+        ],
+      },
+    ];
+
+    const googleNotes = {
+      general: [
+        React.createElement(Fragment, { key: "gen1" }, React.createElement("strong", null, "注：")),
+        React.createElement(Fragment, { key: "gen2" }, "- 表示信息暂缺、不适用或未明确公开。"),
+        React.createElement(Fragment, { key: "gen3" }, "Gemini模型的具体参数量 (除Nano和PaliGemma外) 通常不公开。"),
+        React.createElement(Fragment, { key: "gen4" }, "\"发布/可用时间 (状态)\" 可能指模型宣布时间、API初步可用/预览时间、GA时间或更广泛的集成时间。"),
+        React.createElement(Fragment, { key: "gen5" }, "PaliGemma是基于Gemma的视觉语言模型。Project Astra代表基于Gemini的未来应用方向。"),
+        React.createElement(Fragment, { key: "gen6" }, "本表格信息基于当前可查证公开资料 (截至2025年初的模拟时间点及知识库更新)，Google AI 模型发展迅速，最新信息请以官方渠道为准。 Gemini 2.0 and 2.5 entries based on future dates from original HTML."),
+      ],
+      referencesTitle: "数据来源参考：",
+      references: [
+        { id: "G-1", url: "https://blog.google/technology/ai/google-gemini-ai/", text: "Google Gemini Announcement (Dec 2023)" },
+        { id: "G-2", url: "https://blog.google/products/gemini/bard-gemini-advanced-app/", text: "Gemini Advanced and App Announcement (Feb 2024)" },
+        { id: "G-3", url: "https://storage.googleapis.com/deepmind-media/gemini/gemini_1_report.pdf", text: "Gemini 1.0 Technical Report" },
+        { id: "G-4", url: "https://ai.google.dev/docs/release_notes#february_15_2024", text: "Google AI Release Notes (Feb 15, 2024 - 128K Context for Pro)" },
+        { id: "G-5", url: "https://blog.google/technology/ai/google-gemini-next-generation-model-february-2024/", text: "Gemini 1.5 Pro Early Preview (Feb 2024)" },
+        { id: "G-6", url: "https://cloud.google.com/blog/products/ai-machine-learning/gemini-15-pro-now-available-in-public-preview-in-vertex-ai", text: "Gemini 1.5 Pro Public Preview in Vertex AI (Apr 2024)" },
+        { id: "G-7", url: "https://ai.google.dev/docs/release_notes#june_27_2024", text: "Google AI Release Notes (June 27, 2024 - Gemini 1.5 Pro/Flash GA)" },
+        { id: "G-8", url: "https://storage.googleapis.com/deepmind-media/gemini/gemini_v1_5_report.pdf", text: "Gemini 1.5 Technical Report" },
+        { id: "G-9", url: "https://blog.google/technology/developers/google-io-2024-gemini-flash-project-astra-and-more/", text: "Google I/O 2024: Gemini 1.5 Flash, Project Astra" },
+        { id: "G-10", url: "https://ai.google.dev/docs/release_notes#september_24_2024", text: "Google AI Release Notes (Sept 24, 2024 - Gemini 1.5 Flash-8B exp)" },
+        { id: "G-11", url: "https://blog.google/products/gemini/gemini-2-flash-experimental/", text: "Gemini 2.0 Flash Experimental (Original HTML Future Date)" },
+        { id: "G-12", url: "https://blog.google/products/gemini/gemini-app-now-defaults-to-gemini-2-flash/", text: "Gemini App Default to Gemini 2.0 Flash (Original HTML Future Date)" },
+        { id: "G-13", url: "https://cloud.google.com/vertex-ai/docs/generative-ai/release-notes#february_5_2025", text: "Vertex AI Release Notes - Gemini 2.0 Flash GA (Original HTML Future Date)" },
+        { id: "G-14", url: "https://ai.google.dev/docs/release_notes#february_25_2025", text: "Google AI Release Notes - Gemini 2.0 Flash-Lite GA (Original HTML Future Date)" },
+        { id: "G-15", url: "https://ai.google.dev/docs/release_notes#january_21_2025", text: "Google AI Release Notes - Gemini 2.0 Flash Thinking Preview (Original HTML Future Date)" },
+        { id: "G-16", url: "https://ai.google.dev/docs/release_notes#march_12_2025", text: "Google AI Release Notes - Gemini 2.0 Flash Live Preview (Original HTML Future Date)" },
+        { id: "G-17", url: "https://blog.google/products/gemini/gemini-2-5-pro-experimental/", text: "Gemini 2.5 Pro Experimental (Original HTML Future Date)" },
+        { id: "G-18", url: "https://ai.google.dev/docs/release_notes#may_6_2025", text: "Google AI Release Notes - Gemini 2.5 Pro Update (Original HTML Future Date)" },
+        { id: "G-19", url: "https://cloud.google.com/vertex-ai/docs/generative-ai/open-models/paligemma", text: "PaliGemma on Vertex AI" },
+        { id: "G-20", url: "https://blog.google/technology/ai/google-io-2024-keynote-recap/", text: "Google I/O 2024 Keynote Recap (Project Astra Demo)" },
+      ].map(ref => ({...ref, url: ref.url.trim().startsWith('http') ? ref.url.trim() : `https://${ref.url.trim()}`}))
+    };
+    // --- End of data/googleData.tsx ---
+
+    // --- From data/index.ts ---
+    const ALL_TAB_DATA = {
+      anthropic: {
+        id: "anthropic",
+        label: "Anthropic Claude",
+        headers: TABLE_HEADERS_DEFAULT,
+        rows: anthropicTableRows,
+        notes: anthropicNotes,
+        theme: COMPANY_THEMES.anthropic,
+      },
+      qwen: {
+        id: "qwen",
+        label: "Alibaba Qwen (通义千问)",
+        headers: TABLE_HEADERS_DEFAULT,
+        rows: qwenTableRows,
+        notes: qwenNotes,
+        theme: COMPANY_THEMES.qwen,
+      },
+      openai: {
+        id: "openai",
+        label: "OpenAI GPT",
+        headers: TABLE_HEADERS_DEFAULT,
+        rows: openaiTableRows,
+        notes: openaiNotes,
+        theme: COMPANY_THEMES.openai,
+      },
+      meta: {
+        id: "meta",
+        label: "Meta Llama",
+        headers: TABLE_HEADERS_DEFAULT,
+        rows: metaTableRows,
+        notes: metaNotes,
+        theme: COMPANY_THEMES.meta,
+      },
+      google: {
+        id: "google",
+        label: "Google Gemini",
+        headers: TABLE_HEADERS_DEFAULT,
+        rows: googleTableRows,
+        notes: googleNotes,
+        theme: COMPANY_THEMES.google,
+      },
+    };
+    const TAB_ORDER = TAB_ORDER_FROM_CONSTANTS; // Using the one from constants
+    // --- End of data/index.ts ---
+
+    // --- From components/TabButton.tsx ---
+    const TabButton = ({ tabId, label, activeTab, setActiveTab, theme }) => {
+      const isActive = activeTab === tabId;
+      
+      const activeBgColor = isActive ? theme.headerBgColor : 'bg-transparent';
+      const activeTextColor = isActive ? 'text-white' : theme.textColor;
+      const activeBorderClasses = `border-b-4 ${theme.borderColor}`;
+      const inactiveClasses = `text-slate-500 hover:text-slate-700 border-b-2 border-transparent hover:border-slate-300`;
+
+      return (
+        React.createElement('button',
+          {
+            onClick: () => setActiveTab(tabId),
+            className: `py-3 px-4 md:px-6 focus:outline-none transition-all duration-150 ease-in-out text-sm md:text-base whitespace-nowrap
+              ${isActive ? `${activeBorderClasses} font-semibold ${activeBgColor} ${activeTextColor}` : inactiveClasses}
+              ${isActive ? '' : `hover:${theme.borderColor}`}`,
+            role: 'tab',
+            'aria-selected': isActive,
+            'aria-controls': `tabpanel-${tabId}`,
+            id: `tab-${tabId}`,
+          },
+          label
+        )
+      );
+    };
+    // --- End of components/TabButton.tsx ---
+
+    // --- From components/NotesSection.tsx ---
+    const NotesSection = ({ notes, theme }) => {
+      if (!notes || (!notes.general && !notes.references)) {
+        return null;
+      }
+
+      return (
+        React.createElement('div', { className: `mt-8 p-6 border-t-4 ${theme.notesBorderColor} ${theme.notesBgColor} rounded-b-lg shadow-md` },
+          notes.general && notes.general.length > 0 && (
+            React.createElement('div', { className: "mb-6" },
+              notes.general.map((note, index) => (
+                React.createElement('p', { key: `gen-note-${index}`, className: "text-sm text-slate-700 mb-2" },
+                  note
+                )
+              ))
+            )
+          ),
+          notes.references && notes.references.length > 0 && (
+            React.createElement(Fragment, null,
+              React.createElement('h3', { className: `text-lg font-semibold ${theme.textColor} mb-3` },
+                notes.referencesTitle || "Data Sources:"
+              ),
+              React.createElement('ul', { className: "list-disc list-inside space-y-1" },
+                notes.references.map((ref) => (
+                  React.createElement('li', { key: ref.id, id: `ref-${ref.id}`, className: "text-sm" },
+                    React.createElement('a',
+                      {
+                        href: ref.url,
+                        target: '_blank',
+                        rel: 'noopener noreferrer',
+                        className: `font-medium ${theme.notesLinkColor} ${theme.notesLinkHoverColor} underline-offset-2 hover:underline`
+                      },
+                      `[${ref.id}] ${ref.text}`
+                    )
+                  )
+                ))
+              )
+            )
+          )
+        )
+      );
+    };
+    // --- End of components/NotesSection.tsx ---
+
+    // --- From components/ModelTable.tsx ---
+    const processContentForLinks = (content, references, theme) => {
+      if (typeof content !== 'string') {
+        if (Array.isArray(content)) {
+            return content.map((child, i) => processContentForLinks(child, references, theme));
+        } else if (React.isValidElement(content)) { 
+            if (typeof content.props === 'object' && content.props !== null && 'children' in content.props) {
+                const childrenProp = (content.props).children;
+                if (childrenProp) {
+                    const processedChildren = processContentForLinks(childrenProp, references, theme);
+                    return React.cloneElement(content, content.props, processedChildren);
+                }
+            }
+            return content;
+        }
+        return content;
+      }
+
+      const parts = content.split(/(\[[A-Z]{1,2}-[0-9]{1,2}[a-z]?\])/g);
+      return parts.map((part, index) => {
+          if (part.match(/^\[[A-Z]{1,2}-[0-9]{1,2}[a-z]?\]$/)) {
+              const refId = part.slice(1, -1);
+              const refExists = references.some(r => r.id === refId);
+              if (refExists) {
+                  return (
+                      React.createElement('a',
+                          {
+                              key: `reflink-${refId}-${index}`,
+                              href: `#ref-${refId}`,
+                              className: `font-medium ${theme.notesLinkColor} ${theme.notesLinkHoverColor} underline-offset-2 hover:underline`
+                          },
+                          part
+                      )
+                  );
+              }
+          }
+          return part;
+      });
+    };
+
+    const ModelTable = ({ headers, rows, theme, references }) => {
+      return (
+        React.createElement('div', { className: "overflow-x-auto rounded-lg shadow-md border border-slate-200" },
+          React.createElement('table', { className: "min-w-full divide-y divide-slate-200 bg-white" },
+            React.createElement('thead', { className: `${theme.headerBgColor} text-white` },
+              React.createElement('tr', null,
+                headers.map((header, index) => (
+                  React.createElement('th',
+                    {
+                      key: `header-${index}`,
+                      scope: 'col',
+                      className: "px-4 py-3 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                    },
+                    header
+                  )
+                ))
+              )
+            ),
+            React.createElement('tbody', { className: "bg-white divide-y divide-slate-200" },
+              rows.map((row, rowIndex) => {
+                if (row.isSeriesHeader) {
+                  return (
+                    React.createElement('tr', { key: `series-header-${rowIndex}`, className: `${theme.seriesHeaderBgColor} ${theme.seriesHeaderTextColor}` },
+                      React.createElement('td',
+                        {
+                          colSpan: headers.length,
+                          className: "px-4 py-2.5 text-sm font-semibold"
+                        },
+                        row.cells[0].content
+                      )
+                    )
+                  );
+                }
+                return (
+                  React.createElement('tr', { key: `row-${rowIndex}`, className: `transition-colors duration-150 ${theme.rowHoverBgColor}` },
+                    row.cells.map((cell, cellIndex) => (
+                      React.createElement('td',
+                        {
+                          key: `cell-${rowIndex}-${cellIndex}`,
+                          className: `px-4 py-3 text-sm text-slate-700 align-top ${cell.className || ''}`,
+                          colSpan: cell.colSpan || 1
+                        },
+                        processContentForLinks(cell.content, references, theme)
+                      )
+                    ))
+                  )
+                );
+              })
+            )
+          )
+        )
+      );
+    };
+    // --- End of components/ModelTable.tsx ---
+
+    // --- From components/TabContentContainer.tsx ---
+    const TabContentContainer = ({
+      id,
+      headers,
+      rows,
+      notes,
+      theme,
+      isActive,
+    }) => {
+      if (!isActive) return null;
+
+      return (
+        React.createElement('div',
+          {
+            id: `tabpanel-${id}`,
+            role: 'tabpanel',
+            'aria-labelledby': `tab-${id}`,
+            className: "py-6 focus:outline-none",
+            tabIndex: isActive ? 0 : -1
+          },
+          React.createElement(ModelTable, { headers: headers, rows: rows, theme: theme, references: notes.references }),
+          React.createElement(NotesSection, { notes: notes, theme: theme })
+        )
+      );
+    };
+    // --- End of components/TabContentContainer.tsx ---
+
+    // --- From App.tsx ---
+    const App = () => {
+      const [activeTab, setActiveTab] = useState(TAB_ORDER[0]);
+      const [processedData, setProcessedData] = useState(ALL_TAB_DATA);
+
+      useEffect(() => {
+        const cleanCellContent = (content, validRefIds) => {
+          if (typeof content !== 'string') {
+            if (Array.isArray(content)) {
+              return content.map(child => cleanCellContent(child, validRefIds)).filter(c => c !== null && c !== '');
+            } else if (React.isValidElement(content)) {
+              if (typeof content.props === 'object' && content.props !== null && 'children' in content.props) {
+                const childrenProp = (content.props).children;
+                if (childrenProp) {
+                  const cleanedChildren = cleanCellContent(childrenProp, validRefIds);
+                  if (typeof content.type === 'symbol' && React.Children.count(cleanedChildren) === 0) {
+                     return null;
+                  }
+                  return React.cloneElement(content, content.props, cleanedChildren);
+                }
+              }
+              return content;
+            }
+            return content;
+          }
+          
+          let cleanedString = content;
+          const regex = /\[([A-Z]{1,2}-[0-9]{1,2}[a-z]?)\]/g;
+          let match;
+          while ((match = regex.exec(content)) !== null) {
+            const refId = match[1];
+            if (!validRefIds.has(refId)) {
+              cleanedString = cleanedString.replace(match[0], '');
+            }
+          }
+          return cleanedString.replace(/\s\s+/g, ' ').trim();
+        };
+        
+        const newProcessedData = { ...ALL_TAB_DATA }; 
+
+        TAB_ORDER.forEach(tabId => {
+          const tabData = newProcessedData[tabId];
+          const validRefIds = new Set(tabData.notes.references.map(r => r.id));
+          
+          const cleanedRows = tabData.rows.map(row => {
+            if (row.isSeriesHeader) return row;
+            const cleanedCells = row.cells.map(cell => ({
+              ...cell,
+              content: cleanCellContent(cell.content, validRefIds)
+            }));
+            return { ...row, cells: cleanedCells };
+          });
+          newProcessedData[tabId] = { ...tabData, rows: cleanedRows };
+        });
+        setProcessedData(newProcessedData);
+      }, []);
+
+      const activeTabData = processedData[activeTab];
+      const currentTheme = activeTabData.theme;
+
+      return (
+        React.createElement('div', { className: "flex flex-col min-h-screen" },
+          React.createElement('header', { className: `sticky top-0 z-50 shadow-lg ${currentTheme.headerBgColor}` },
+            React.createElement('div', { className: "container mx-auto px-4 py-4 md:py-6" },
+              React.createElement('h1', { className: "text-2xl md:text-3xl font-bold text-white text-center md:text-left" },
+                "AI Model Evolution History"
+              ),
+              React.createElement('p', { className: "text-sm text-white/90 mt-1 text-center md:text-left" },
+                "Tracking the advancements of major AI models."
+              )
+            )
+          ),
+          React.createElement('nav',
+            {
+              className: "sticky top-[92px] md:top-[116px] z-40 bg-slate-50/80 backdrop-blur-md border-b border-slate-200 shadow-sm overflow-x-auto hide-scrollbar",
+              'aria-label': "AI Model Companies"
+            },
+            React.createElement('div', { className: "container mx-auto flex justify-start md:justify-center", role: "tablist" },
+              TAB_ORDER.map((tabId) => (
+                React.createElement(TabButton, {
+                  key: tabId,
+                  tabId: tabId,
+                  label: processedData[tabId].label,
+                  activeTab: activeTab,
+                  setActiveTab: setActiveTab,
+                  theme: processedData[tabId].theme,
+                })
+              ))
+            )
+          ),
+          React.createElement('main', { className: "container mx-auto px-4 py-2 md:py-6 flex-grow" },
+            TAB_ORDER.map((tabId) => (
+              React.createElement(TabContentContainer, {
+                key: tabId,
+                ...processedData[tabId],
+                isActive: activeTab === tabId,
+              })
+            ))
+          ),
+          React.createElement('footer', { className: `py-6 text-center ${currentTheme.headerBgColor} bg-opacity-10 border-t ${currentTheme.borderColor}` },
+            React.createElement('p', { className: `text-sm ${currentTheme.textColor}` },
+              `© ${new Date().getFullYear()} AI Model Tracker. All data is for informational purposes. Current view: ${activeTabData.label}`
+            )
+          )
+        )
+      );
+    };
+    // --- End of App.tsx ---
+
+    // --- From index.tsx (Rendering logic) ---
+    const rootElement = document.getElementById('root');
+    if (!rootElement) {
+      throw new Error("Could not find root element to mount to");
+    }
+
+    const root = ReactDOM.createRoot(rootElement);
+    root.render(
+      React.createElement(React.StrictMode, null, 
+        React.createElement(App, null)
+      )
+    );
+    // --- End of index.tsx ---
+
+    // --- END OF INLINED SCRIPT ---
+  </script>
+</body>
+</html>
